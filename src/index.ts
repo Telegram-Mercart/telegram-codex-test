@@ -18,7 +18,31 @@ export default {
         return new Response('unauthorized', { status: 401 });
       }
 
-      await request.json<Record<string, unknown>>();
+      // Parse the incoming Telegram update
+      const update = await request.json<Record<string, any>>();
+      const message = update?.message;
+      const text: string | undefined = message?.text;
+      const chatId: number | undefined = message?.chat?.id;
+
+      if (text && chatId) {
+        const body = { chat_id: chatId, text };
+        console.log('Sending message to Telegram:', body);
+
+        const telegramResp = await fetch(
+          `https://api.telegram.org/bot${env.BOT_TOKEN}/sendMessage`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          }
+        );
+
+        const respText = await telegramResp.text();
+        console.log('Telegram response:', respText);
+      } else {
+        console.log('No message to echo:', update);
+      }
+
       return new Response('ok');
     }
 
