@@ -2,6 +2,7 @@ export interface Env {
   BOT_KV: KVNamespace;
   BOT_TOKEN: string;
   WEBHOOK_SECRET: string;
+  OPENAI_API_KEY: string;
 }
 
 export default {
@@ -25,7 +26,28 @@ export default {
       const chatId: number | undefined = message?.chat?.id;
 
       if (text && chatId) {
-        const body = { chat_id: chatId, text };
+        let replyText = text;
+        try {
+          const aiResp = await fetch('https://api.openai.com/v1/responses', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: 'gpt-5-mini',
+              input: text,
+              max_output_tokens: 800
+            })
+          });
+
+          const aiJson = await aiResp.json<Record<string, any>>();
+          replyText = aiJson.output_text ?? replyText;
+        } catch (err) {
+          console.error('OpenAI request failed', err);
+        }
+
+        const body = { chat_id: chatId, text: replyText };
         console.log('Sending message to Telegram:', body);
 
         const telegramResp = await fetch(
