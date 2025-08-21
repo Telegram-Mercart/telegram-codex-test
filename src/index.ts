@@ -53,6 +53,48 @@ export default {
           });
         };
 
+        const sendVoice = async (text: string) => {
+          try {
+            const speechResp = await fetch(
+              'https://api.openai.com/v1/audio/speech',
+              {
+                method: 'POST',
+                headers: {
+                  Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  model: 'gpt-4o-mini-tts',
+                  voice: 'coral',
+                  input: text,
+                  instructions:
+                    "Begin by stating 'This voice is AI-generated.'",
+                  response_format: 'opus'
+                })
+              }
+            );
+
+            const audioArrayBuffer = await speechResp.arrayBuffer();
+            const formData = new FormData();
+            formData.append('chat_id', chatId.toString());
+            formData.append(
+              'voice',
+              new File([audioArrayBuffer], 'speech.ogg', {
+                type: 'audio/ogg'
+              })
+            );
+            formData.append('caption', '(AI-generated voice)');
+
+            await fetch(
+              `https://api.telegram.org/bot${env.BOT_TOKEN}/sendVoice`,
+              { method: 'POST', body: formData }
+            );
+          } catch (err) {
+            console.error('TTS generation failed', err);
+            await send(text);
+          }
+        };
+
         const lower = text.toLowerCase();
 
         if (lower.startsWith('/start')) {
@@ -151,7 +193,7 @@ export default {
           { expirationTtl: 60 * 60 * 48 }
         );
 
-        await send(replyText);
+        await sendVoice(replyText);
       } else {
         console.log('No message to echo:', update);
       }
