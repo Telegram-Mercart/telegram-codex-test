@@ -98,14 +98,14 @@ export default {
         const lower = text.toLowerCase();
 
         if (lower.startsWith('/start')) {
-          await send(
+          await sendVoice(
             "Welcome! I'm your AI assistant powered by GPT-5 Pro. Ask me anything or try /help for more information."
           );
           return new Response('ok');
         }
 
         if (lower.startsWith('/help')) {
-          await send(
+          await sendVoice(
             'Available commands:\n/help - Show this message\n/settings - View current settings\n/settings_tone [formal|friendly|technical] - Change response style'
           );
           return new Response('ok');
@@ -126,9 +126,9 @@ export default {
               technical:
                 'Tone changed to technical. Responses will now use precise terminology and provide detailed explanations.'
             };
-            await send(toneMessages[tone]);
+            await sendVoice(toneMessages[tone]);
           } else {
-            await send(
+            await sendVoice(
               'Usage: /settings_tone [formal|friendly|technical]'
             );
           }
@@ -137,7 +137,7 @@ export default {
 
         if (lower.startsWith('/settings')) {
           const toneLabel = tone.charAt(0).toUpperCase() + tone.slice(1);
-          await send(
+          await sendVoice(
             `Current settings:\nTone: ${toneLabel}\nModel: GPT-5 Pro\nMessages today: ${count}/50`
           );
           return new Response('ok');
@@ -145,7 +145,7 @@ export default {
 
         // Enforce daily limit of 50 calls or 20k tokens
         if (count >= 50 || tokens >= 20000) {
-          await send('Daily quota exceeded. Please try again tomorrow.');
+          await sendVoice('Daily quota exceeded. Please try again tomorrow.');
           return new Response('ok');
         }
 
