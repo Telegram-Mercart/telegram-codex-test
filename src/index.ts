@@ -48,6 +48,7 @@ export default {
               o.content?.map((c: any) => c.text).join('')
             ).join('\n') ??
             replyText;
+
         } catch (err) {
           console.error('OpenAI request failed', err);
         }
