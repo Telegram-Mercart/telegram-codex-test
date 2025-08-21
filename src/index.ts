@@ -53,6 +53,44 @@ export default {
           });
         };
 
+        const sendVoice = async (text: string) => {
+          try {
+            const ttsResp = await fetch('https://api.openai.com/v1/responses', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                model: 'gpt-4o-mini-tts',
+                input: text,
+                audio: { voice: 'alloy', format: 'ogg' }
+              })
+            });
+
+            const ttsJson = await ttsResp.json<Record<string, any>>();
+            const audioData = ttsJson.output?.[0]?.content?.[0]?.audio?.data;
+
+            if (audioData) {
+              const binary = Uint8Array.from(atob(audioData), c => c.charCodeAt(0));
+              const form = new FormData();
+              form.append('chat_id', chatId.toString());
+              form.append('caption', text);
+              form.append('voice', new Blob([binary], { type: 'audio/ogg' }), 'voice.ogg');
+
+              await fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/sendVoice`, {
+                method: 'POST',
+                body: form
+              });
+            } else {
+              await send(text);
+            }
+          } catch (err) {
+            console.error('TTS request failed', err);
+            await send(text);
+          }
+        };
+
         const lower = text.toLowerCase();
 
         if (lower.startsWith('/start')) {
@@ -151,7 +189,7 @@ export default {
           { expirationTtl: 60 * 60 * 48 }
         );
 
-        await send(replyText);
+        await sendVoice(replyText);
       } else {
         console.log('No message to echo:', update);
       }
