@@ -4,12 +4,12 @@ compatibility_date = "2024-05-13"
 
 [[kv_namespaces]]
 binding = "BOT_KV"
-id = "<KV_NAMESPACE_ID>"
-preview_id = "<KV_NAMESPACE_PREVIEW_ID>"
+id = "7431f8ecb34547298fd8bb5e29976e5e"
+
 
 [vars]
-BOT_TOKEN = "<BOT_TOKEN>"
-WEBHOOK_SECRET = "<WEBHOOK_SECRET>"
+BOT_TOKEN = "7246905096:AAHrdZkgo7J6MiOPcu7OaV68-lFeuoIzQLk"
+WEBHOOK_SECRET = "nDK-jKO_zuoqFlccW68qZBp3O8VRHygO5FyvV-W6AroWO5EY"
 WEBHOOK_PATH = "/webhook"
 ALLOWED_UPDATES = '["message"]'
 
