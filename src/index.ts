@@ -42,7 +42,13 @@ export default {
           });
 
           const aiJson = await aiResp.json<Record<string, any>>();
-          replyText = aiJson.output_text ?? replyText;
+          replyText =
+            aiJson.output_text ??
+            aiJson.output?.map((o: any) =>
+              o.content?.map((c: any) => c.text).join('')
+            ).join('\n') ??
+            replyText;
+
         } catch (err) {
           console.error('OpenAI request failed', err);
         }
