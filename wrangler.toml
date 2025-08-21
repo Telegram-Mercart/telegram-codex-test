@@ -1,0 +1,17 @@
+name = "telegram-codex-worker"
+main = "src/index.ts"
+compatibility_date = "2024-05-13"
+
+[[kv_namespaces]]
+binding = "BOT_KV"
+id = "<KV_NAMESPACE_ID>"
+preview_id = "<KV_NAMESPACE_PREVIEW_ID>"
+
+[vars]
+BOT_TOKEN = "<BOT_TOKEN>"
+WEBHOOK_SECRET = "<WEBHOOK_SECRET>"
+WEBHOOK_PATH = "/webhook"
+ALLOWED_UPDATES = '["message"]'
+
+[observability]
+enabled = true
