@@ -26,7 +26,33 @@ export default {
       const chatId: number | undefined = message?.chat?.id;
 
       if (text && chatId) {
+        // Build a per-user, per-day quota key
+        const now = new Date();
+        const date = now.toISOString().slice(0, 10).replace(/-/g, '');
+        const quotaKey = `quota:user:${chatId}:${date}`;
+
+        // Fetch existing usage from KV, defaulting to zero
+        const usage = await env.BOT_KV.get(quotaKey, { type: 'json' }) as
+          | { count: number; tokens: number }
+          | null;
+        let count = usage?.count ?? 0;
+        let tokens = usage?.tokens ?? 0;
+
+        // Enforce daily limit of 20 calls or 20k tokens
+        if (count >= 20 || tokens >= 20000) {
+          await fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: 'Daily quota exceeded. Please try again tomorrow.'
+            })
+          });
+          return new Response('ok');
+        }
+
         let replyText = text;
+        let totalTokens = 0;
         try {
           const aiResp = await fetch('https://api.openai.com/v1/responses', {
             method: 'POST',
@@ -49,9 +75,22 @@ export default {
             ).join('\n') ??
             replyText;
 
+          const inputTokens = aiJson.usage?.input_tokens ?? 0;
+          const outputTokens = aiJson.usage?.output_tokens ?? 0;
+          totalTokens = inputTokens + outputTokens;
+
         } catch (err) {
           console.error('OpenAI request failed', err);
         }
+
+        // Update usage in KV with new count and token totals
+        count += 1;
+        tokens += totalTokens;
+        await env.BOT_KV.put(
+          quotaKey,
+          JSON.stringify({ count, tokens }),
+          { expirationTtl: 60 * 60 * 48 }
+        );
 
         const body = { chat_id: chatId, text: replyText };
         console.log('Sending message to Telegram:', body);
